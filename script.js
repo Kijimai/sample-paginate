@@ -22,8 +22,8 @@ prevBtn.addEventListener("click", () => changePage("prev"));
 nextBtn.addEventListener("click", () => changePage("next"));
 
 entriesOption.addEventListener("change", (e) => {
-  console.log("changed!");
-  entrySize = e.target.value;
+  // convert entry size value to integer
+  entrySize = Number(e.target.value);
   console.log(entrySize);
   currentShowingData = [];
   getData();
@@ -32,8 +32,8 @@ entriesOption.addEventListener("change", (e) => {
 async function getData() {
   const data = await fetch("./data.json").then((res) => res.json());
   numberOfPages = Math.ceil(data.length / entrySize);
-  results = splitData(data, numberOfPages);
-  numberOfPages = results.length;
+  console.log("number of pages", numberOfPages);
+  results = splitData(data, entrySize);
   currentPaginatedData = results[currentIndex];
   currentShowingData = [];
   console.log(results);
