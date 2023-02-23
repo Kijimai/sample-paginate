@@ -1,11 +1,17 @@
+// Global values for use in several functions
 let numberOfPages = 0;
 let results = [];
 let foundData = [];
 let currentPaginatedData = [];
-let currentPageNumber = currentIndex + 1;
 let currentIndex = 0;
+let currentPageNumber = currentIndex + 1;
 let totalDataCount = null;
-// Entry size of results table
+let currentShowingData = [];
+
+// Loading State
+let isLoading = false;
+
+// Default values for table filters
 let entrySize = 10;
 
 const entriesOption = document.getElementById("entries-option");
@@ -19,19 +25,22 @@ entriesOption.addEventListener("change", (e) => {
   console.log("changed!");
   entrySize = e.target.value;
   console.log(entrySize);
+  currentShowingData = [];
   getData();
 });
 
 async function getData() {
   const data = await fetch("./data.json").then((res) => res.json());
   numberOfPages = Math.ceil(data.length / entrySize);
-  results = splitData(data, numberOfPages, entrySize);
+  results = splitData(data, numberOfPages);
+  numberOfPages = results.length;
   currentPaginatedData = results[currentIndex];
-
+  currentShowingData = [];
   console.log(results);
+  drawTable(currentPaginatedData);
 }
 
-function createTableRow(data, listHolder) {
+function createTableRow(data) {
   const { first_name, last_name, email } = data;
 
   const tableRowEl = document.createElement("tr");
@@ -44,7 +53,7 @@ function createTableRow(data, listHolder) {
   tableRowEl.appendChild(firstName);
   tableRowEl.appendChild(lastName);
   tableRowEl.appendChild(userEmail);
-  listHolder.push(tableRowEl);
+  currentShowingData.push(tableRowEl);
 }
 
 // /**
@@ -68,60 +77,58 @@ function changePage(input) {
   if (input === "next") {
     if (currentIndex < numberOfPages - 1) {
       currentIndex += 1;
-      console.log(results[currentIndex]);
     } else {
       console.log("Can't go forward!");
       return;
     }
   }
-  console.log(currentIndex);
   currentPaginatedData = results[currentIndex];
+  drawTable(currentPaginatedData);
 }
 
 /**
  * @param {Array} list
- * @param {int} maxEntrySize
+ * @param {int} chunkSize
  * @returns {Array<Array<object>}
  */
-function splitData(list, numberOfPages, maxEntrySize) {
-  console.log(`last page: ${numberOfPages}`);
+function splitData(list, chunkSize) {
+  let tempArray = [];
 
-  const newResults = Array.from({ length: numberOfPages }, (_, index) => {
-    const start = index * maxEntrySize;
-    const end = start + maxEntrySize;
+  for (let i = 0; i < list.length; i += chunkSize) {
+    newChunk = list.slice(i, i + chunkSize);
+    tempArray.push(newChunk);
+  }
 
-    return list.slice(start, end);
-  });
+  // const newResults = Array.from({ length: numberOfPages }, (_, index) => {
+  //   const start = index * maxEntrySize;
+  //   const end = start + maxEntrySize;
 
-  return newResults;
+  //   return list.slice(start, end);
+  // });
+
+  return tempArray;
 }
-
-// function pagination(currentIndex, totalCount, maxEntrySize, list) {
-//   const lastPage = Math.ceil(totalCount / maxEntrySize);
-
-//   const newResults = Array.from({ length: lastPage }, (_, index) => {
-//     const start = index * maxEntrySize;
-//     const end = start + maxEntrySize;
-
-//     return list.slice(start, end);
-//   });
-
-//   const currentPageDisplayNum = currentIndex + 1;
-
-//   return { newResults, currentPageDisplayNum };
-// }
 
 /**
  * Adds onto the table body a single table data
  * @param {object} listItem
  * @param {Boolean} isFiltering
  */
-function drawTable(listItem, isFiltering = false) {
+function drawTable(list, isFiltering = false) {
   const tableBody = document.getElementById("table-body");
+  currentShowingData = [];
+  tableBody.innerHTML = "";
   if (isFiltering) {
     updateEntriesText();
   }
-  tableBody.appendChild(listItem);
+
+  list.forEach((listItem) => {
+    createTableRow(listItem);
+  });
+
+  currentShowingData.forEach((listItem) => {
+    tableBody.appendChild(listItem);
+  });
 }
 
 /**
