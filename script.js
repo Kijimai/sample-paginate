@@ -1,6 +1,5 @@
 let maxPage = 1;
 let results = [];
-// let textSearchResults = []
 let foundData = [];
 
 async function getData() {
@@ -24,7 +23,29 @@ function createTableRow(data, listHolder) {
   listHolder.push(tableRowEl);
 }
 
-function changePage(listHolder, currentPage, maxPage, input) {}
+/**
+ *
+ * @param {Array} list The array of data -- iterated and passed in to drawTable()
+ * @param {int} currentPage The current index of the list passed in: starts at 0 (add 1 to change the page text)
+ * @param {int} maxPageSize The maximum allowed page count of the list based on entry size
+ * @param {string} input Takes a string value of either "next" or "prev"
+ */
+function changePage(list, currentPage, maxPageSize, input) {
+  let newPageNum = 0;
+  if (input === "next") {
+    if (currentPage + 1 === maxPageSize) return;
+    else {
+      newPageNum = currentPage + 2;
+    }
+  } else if (input === "prev") {
+    if (currentPage + 1 === 1) return;
+    else {
+      newPageNum = currentPage + 1 - 1;
+    }
+  }
+
+  updatePageText(newPageNum);
+}
 
 function pagination(currentIndex, totalCount, maxEntrySize, list) {
   const lastPage = Math.ceil(totalCount / maxEntrySize);
@@ -41,6 +62,11 @@ function pagination(currentIndex, totalCount, maxEntrySize, list) {
   return { newResults, currentPageDisplayNum };
 }
 
+/**
+ * Adds onto the table body a single table data
+ * @param {object} listItem
+ * @param {Boolean} isFiltering
+ */
 function drawTable(listItem, isFiltering = false) {
   const tableBody = document.getElementById("table-body");
   if (isFiltering) {
@@ -68,6 +94,30 @@ function updateEntriesText(
   } of ${totalEntrySize} entries`;
 
   entriesText.innerHTML = textValue;
+}
+
+function updatePageText(pageNumber, maxPageSize) {
+  const pageNumber = document.getElementById("page-number");
+  pageNumber.innerText = pageNumber;
+}
+
+
+function disablePaginateButton(btn) {
+  if (btn === "prev") {
+    document.getElementById("prev").disabled = true;
+  }
+  if (btn === "next") {
+    document.getElementById("next").disabled = true;
+  }
+}
+
+function enablePaginateButton(btn) {
+  if (btn === "prev") {
+    document.getElementById("prev").disabled = false;
+  }
+  if (btn === "next") {
+    document.getElementById("next").disabled = false;
+  }
 }
 
 // getData()
