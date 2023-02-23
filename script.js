@@ -1,10 +1,30 @@
-let maxPage = 1;
+let lastPage = 0;
 let results = [];
 let foundData = [];
+let currentPaginatedData = [];
+let currentPageNumber = 1
+let currentIndex = 0;
+let totalDataCount = null;
+// Entry size of results table
+let entrySize = 10;
+
+const entriesOption = document.getElementById("entries-option");
+
+entriesOption.addEventListener("change", (e) => {
+  console.log("changed!");
+  entrySize = e.target.value;
+  console.log(entrySize);
+  getData();
+});
 
 async function getData() {
   const data = await fetch("./data.json").then((res) => res.json());
-  results = data;
+  lastPage = Math.ceil(data.length / entrySize);
+  const newResults = splitData(data, lastPage, entrySize);
+  results = newResults;
+  currentPaginatedData = results[currentIndex];
+
+  console.log(results);
 }
 
 function createTableRow(data, listHolder) {
@@ -47,8 +67,13 @@ function changePage(list, currentPage, maxPageSize, input) {
   updatePageText(newPageNum);
 }
 
-function pagination(currentIndex, totalCount, maxEntrySize, list) {
-  const lastPage = Math.ceil(totalCount / maxEntrySize);
+/**
+ * @param {Array} list
+ * @param {int} maxEntrySize
+ * @returns {Array<Array<object>}
+ */
+function splitData(list, lastPage, maxEntrySize) {
+  console.log(`last page: ${lastPage}`);
 
   const newResults = Array.from({ length: lastPage }, (_, index) => {
     const start = index * maxEntrySize;
@@ -57,10 +82,23 @@ function pagination(currentIndex, totalCount, maxEntrySize, list) {
     return list.slice(start, end);
   });
 
-  const currentPageDisplayNum = currentIndex + 1;
-
-  return { newResults, currentPageDisplayNum };
+  return newResults;
 }
+
+// function pagination(currentIndex, totalCount, maxEntrySize, list) {
+//   const lastPage = Math.ceil(totalCount / maxEntrySize);
+
+//   const newResults = Array.from({ length: lastPage }, (_, index) => {
+//     const start = index * maxEntrySize;
+//     const end = start + maxEntrySize;
+
+//     return list.slice(start, end);
+//   });
+
+//   const currentPageDisplayNum = currentIndex + 1;
+
+//   return { newResults, currentPageDisplayNum };
+// }
 
 /**
  * Adds onto the table body a single table data
@@ -96,11 +134,10 @@ function updateEntriesText(
   entriesText.innerHTML = textValue;
 }
 
-function updatePageText(pageNumber, maxPageSize) {
-  const pageNumber = document.getElementById("page-number");
-  pageNumber.innerText = pageNumber;
+function updatePageText(pageNumber) {
+  const pageNumberText = document.getElementById("page-number");
+  pageNumberText.innerText = pageNumber;
 }
-
 
 function disablePaginateButton(btn) {
   if (btn === "prev") {
@@ -120,4 +157,4 @@ function enablePaginateButton(btn) {
   }
 }
 
-// getData()
+// getData();
