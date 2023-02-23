@@ -1,14 +1,19 @@
-let lastPage = 0;
+let numberOfPages = 0;
 let results = [];
 let foundData = [];
 let currentPaginatedData = [];
-let currentPageNumber = 1
+let currentPageNumber = currentIndex + 1;
 let currentIndex = 0;
 let totalDataCount = null;
 // Entry size of results table
 let entrySize = 10;
 
 const entriesOption = document.getElementById("entries-option");
+const prevBtn = document.getElementById("prev");
+const nextBtn = document.getElementById("next");
+
+prevBtn.addEventListener("click", () => changePage("prev"));
+nextBtn.addEventListener("click", () => changePage("next"));
 
 entriesOption.addEventListener("change", (e) => {
   console.log("changed!");
@@ -19,9 +24,8 @@ entriesOption.addEventListener("change", (e) => {
 
 async function getData() {
   const data = await fetch("./data.json").then((res) => res.json());
-  lastPage = Math.ceil(data.length / entrySize);
-  const newResults = splitData(data, lastPage, entrySize);
-  results = newResults;
+  numberOfPages = Math.ceil(data.length / entrySize);
+  results = splitData(data, numberOfPages, entrySize);
   currentPaginatedData = results[currentIndex];
 
   console.log(results);
@@ -43,28 +47,35 @@ function createTableRow(data, listHolder) {
   listHolder.push(tableRowEl);
 }
 
-/**
- *
- * @param {Array} list The array of data -- iterated and passed in to drawTable()
- * @param {int} currentPage The current index of the list passed in: starts at 0 (add 1 to change the page text)
- * @param {int} maxPageSize The maximum allowed page count of the list based on entry size
- * @param {string} input Takes a string value of either "next" or "prev"
- */
-function changePage(list, currentPage, maxPageSize, input) {
-  let newPageNum = 0;
-  if (input === "next") {
-    if (currentPage + 1 === maxPageSize) return;
-    else {
-      newPageNum = currentPage + 2;
-    }
-  } else if (input === "prev") {
-    if (currentPage + 1 === 1) return;
-    else {
-      newPageNum = currentPage + 1 - 1;
+// /**
+//  *
+//  * @param {Array} list The array of data -- iterated and passed in to drawTable()
+//  * @param {int} currentPage The current index of the list passed in: starts at 0 (add 1 to change the page text)
+//  * @param {int} maxPageSize The maximum allowed page count of the list based on entry size
+//  * @param {string} input Takes a string value of either "next" or "prev"
+//  */
+function changePage(input) {
+  if (input === "prev") {
+    if (currentIndex !== 0) {
+      currentIndex -= 1;
+      console.log(results[currentIndex]);
+    } else {
+      console.log("Can't go back!");
+      return;
     }
   }
 
-  updatePageText(newPageNum);
+  if (input === "next") {
+    if (currentIndex < numberOfPages - 1) {
+      currentIndex += 1;
+      console.log(results[currentIndex]);
+    } else {
+      console.log("Can't go forward!");
+      return;
+    }
+  }
+  console.log(currentIndex);
+  currentPaginatedData = results[currentIndex];
 }
 
 /**
@@ -72,10 +83,10 @@ function changePage(list, currentPage, maxPageSize, input) {
  * @param {int} maxEntrySize
  * @returns {Array<Array<object>}
  */
-function splitData(list, lastPage, maxEntrySize) {
-  console.log(`last page: ${lastPage}`);
+function splitData(list, numberOfPages, maxEntrySize) {
+  console.log(`last page: ${numberOfPages}`);
 
-  const newResults = Array.from({ length: lastPage }, (_, index) => {
+  const newResults = Array.from({ length: numberOfPages }, (_, index) => {
     const start = index * maxEntrySize;
     const end = start + maxEntrySize;
 
@@ -139,22 +150,15 @@ function updatePageText(pageNumber) {
   pageNumberText.innerText = pageNumber;
 }
 
-function disablePaginateButton(btn) {
-  if (btn === "prev") {
-    document.getElementById("prev").disabled = true;
-  }
-  if (btn === "next") {
-    document.getElementById("next").disabled = true;
-  }
+/**
+ * @param {Node} targetBtn
+ */
+function disablePaginateButton(targetBtn) {
+  targetBtn.disabled = true;
 }
 
-function enablePaginateButton(btn) {
-  if (btn === "prev") {
-    document.getElementById("prev").disabled = false;
-  }
-  if (btn === "next") {
-    document.getElementById("next").disabled = false;
-  }
+function enablePaginateButton(targetBtn) {
+  targetBtn.disabled = false;
 }
 
 // getData();
