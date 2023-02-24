@@ -1,59 +1,49 @@
 // Global values for use in several functions
-let numberOfPages = 0;
-let results = [];
-let foundData = [];
-let currentPaginatedData = [];
-let currentIndex = 0;
-let currentPageNumber = currentIndex + 1;
-let totalDataCount = null;
-let currentShowingData = [];
+let results = []
+let foundData = []
+let currentPaginatedData = []
+let currentShowingData = []
+let tableDisplayData = []
+let currentIndex = 0
+let currentPageNumber = currentIndex + 1
+let totalDataCount = null
 
 // Loading State
-let isLoading = false;
+let isLoading = false
 
 // Default values for table filters
-let entrySize = 10;
+let entrySize = 10
 
-const entriesOption = document.getElementById("entries-option");
-const prevBtn = document.getElementById("prev");
-const nextBtn = document.getElementById("next");
+const entriesOption = document.getElementById("entries-option")
+const prevBtn = document.getElementById("prev")
+const nextBtn = document.getElementById("next")
+const getDataBtn = document.getElementById("get-data-btn")
 
-prevBtn.addEventListener("click", () => changePage("prev"));
-nextBtn.addEventListener("click", () => changePage("next"));
+prevBtn.addEventListener("click", () => changePage("prev"))
+nextBtn.addEventListener("click", () => changePage("next"))
 
 entriesOption.addEventListener("change", (e) => {
   // convert entry size value to integer
-  entrySize = Number(e.target.value);
-  console.log(entrySize);
-  currentShowingData = [];
-  getData();
-});
+  entrySize = Number(e.target.value)
+  adjustTable()
+})
 
-async function getData() {
-  const data = await fetch("./data.json").then((res) => res.json());
-  numberOfPages = Math.ceil(data.length / entrySize);
-  console.log("number of pages", numberOfPages);
-  results = splitData(data, entrySize);
-  currentPaginatedData = results[currentIndex];
-  currentShowingData = [];
-  console.log(results);
-  drawTable(currentPaginatedData);
+getDataBtn.addEventListener("click", getData)
+
+function adjustTable() {
+  if (results.length === 0) return
+  currentShowingData = splitData(results, entrySize)
+  currentIndex = 0
+  currentPaginatedData = currentShowingData[currentIndex]
+  drawTable(currentPaginatedData)
 }
 
-function createTableRow(data) {
-  const { first_name, last_name, email } = data;
-
-  const tableRowEl = document.createElement("tr");
-  const firstName = document.createElement("td");
-  const lastName = document.createElement("td");
-  const userEmail = document.createElement("td");
-  firstName.innerHTML = `${first_name}`;
-  lastName.innerHTML = `${last_name}`;
-  userEmail.innerHTML = `${email}`;
-  tableRowEl.appendChild(firstName);
-  tableRowEl.appendChild(lastName);
-  tableRowEl.appendChild(userEmail);
-  currentShowingData.push(tableRowEl);
+async function getData() {
+  const data = await fetch("./data.json").then((res) => res.json())
+  results = data
+  currentShowingData = splitData(results, entrySize)
+  currentPaginatedData = currentShowingData[currentIndex]
+  drawTable(currentPaginatedData)
 }
 
 // /**
@@ -64,26 +54,28 @@ function createTableRow(data) {
 //  * @param {string} input Takes a string value of either "next" or "prev"
 //  */
 function changePage(input) {
+  const numberOfPages = currentShowingData.length
   if (input === "prev") {
     if (currentIndex !== 0) {
-      currentIndex -= 1;
-      console.log(results[currentIndex]);
+      currentIndex -= 1
+      console.log(currentShowingData[currentIndex])
     } else {
-      console.log("Can't go back!");
-      return;
+      console.log("Can't go back!")
+      return
     }
   }
 
   if (input === "next") {
     if (currentIndex < numberOfPages - 1) {
-      currentIndex += 1;
+      currentIndex += 1
     } else {
-      console.log("Can't go forward!");
-      return;
+      console.log("Can't go forward!")
+      return
     }
   }
-  currentPaginatedData = results[currentIndex];
-  drawTable(currentPaginatedData);
+  currentPaginatedData = currentShowingData[currentIndex]
+  console.log(currentPaginatedData)
+  drawTable(currentPaginatedData)
 }
 
 /**
@@ -92,11 +84,11 @@ function changePage(input) {
  * @returns {Array<Array<object>}
  */
 function splitData(list, chunkSize) {
-  let tempArray = [];
+  let tempArray = []
 
   for (let i = 0; i < list.length; i += chunkSize) {
-    newChunk = list.slice(i, i + chunkSize);
-    tempArray.push(newChunk);
+    newChunk = list.slice(i, i + chunkSize)
+    tempArray.push(newChunk)
   }
 
   // const newResults = Array.from({ length: numberOfPages }, (_, index) => {
@@ -106,7 +98,23 @@ function splitData(list, chunkSize) {
   //   return list.slice(start, end);
   // });
 
-  return tempArray;
+  return tempArray
+}
+
+function createTableRow(data) {
+  const { first_name, last_name, email } = data
+
+  const tableRowEl = document.createElement("tr")
+  const firstName = document.createElement("td")
+  const lastName = document.createElement("td")
+  const userEmail = document.createElement("td")
+  firstName.innerHTML = `${first_name}`
+  lastName.innerHTML = `${last_name}`
+  userEmail.innerHTML = `${email}`
+  tableRowEl.appendChild(firstName)
+  tableRowEl.appendChild(lastName)
+  tableRowEl.appendChild(userEmail)
+  tableDisplayData.push(tableRowEl)
 }
 
 /**
@@ -115,20 +123,20 @@ function splitData(list, chunkSize) {
  * @param {Boolean} isFiltering
  */
 function drawTable(list, isFiltering = false) {
-  const tableBody = document.getElementById("table-body");
-  currentShowingData = [];
-  tableBody.innerHTML = "";
+  const tableBody = document.getElementById("table-body")
+  tableDisplayData = []
+  tableBody.innerHTML = ""
   if (isFiltering) {
-    updateEntriesText();
+    updateEntriesText()
   }
 
   list.forEach((listItem) => {
-    createTableRow(listItem);
-  });
+    createTableRow(listItem)
+  })
 
-  currentShowingData.forEach((listItem) => {
-    tableBody.appendChild(listItem);
-  });
+  tableDisplayData.forEach((listItem) => {
+    tableBody.appendChild(listItem)
+  })
 }
 
 /**
@@ -144,28 +152,28 @@ function updateEntriesText(
   maxEntrySize,
   isFiltering
 ) {
-  const entriesText = document.getElementById("entries-text");
+  const entriesText = document.getElementById("entries-text")
   let textValue = `Showing ${currentEntryIndex + 1} to ${
     currentEntryIndex + 1 + maxEntrySize
-  } of ${totalEntrySize} entries`;
+  } of ${totalEntrySize} entries`
 
-  entriesText.innerHTML = textValue;
+  entriesText.innerHTML = textValue
 }
 
 function updatePageText(pageNumber) {
-  const pageNumberText = document.getElementById("page-number");
-  pageNumberText.innerText = pageNumber;
+  const pageNumberText = document.getElementById("page-number")
+  pageNumberText.innerText = pageNumber
 }
 
 /**
  * @param {Node} targetBtn
  */
 function disablePaginateButton(targetBtn) {
-  targetBtn.disabled = true;
+  targetBtn.disabled = true
 }
 
 function enablePaginateButton(targetBtn) {
-  targetBtn.disabled = false;
+  targetBtn.disabled = false
 }
 
 // getData();
